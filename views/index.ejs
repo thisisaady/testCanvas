@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <script type="text/javascript" src="/canvas-sdk/js/canvas-all.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://code.jquery.com/jquery.js"></script>
+
+    <script>
+
+        $(document).ready(function () {
+
+            $("#chatterForm").on('submit', function() {
+
+                var chatterText = $("#chatterText").val();
+                console.log('on submit, text = ' + chatterText);
+
+                // makes sure you use the "-" instead of "=" because otherwise the JSON
+                // is escaped
+                var sr = <%- signedRequestJson %>;
+                console.log(sr);
+                // Save the token
+                Sfdc.canvas.oauth.token(sr.oauthToken);
+
+                // Reference the Chatter user's URL from Context.Links object.
+                var url = sr.context.links.chatterFeedsUrl + "/news/" + sr.context.user.userId + "/feed-items";
+                var body = {body: {messageSegments: [
+                    {type: "Text", text: chatterText }
+                ]}};
+
+                Sfdc.canvas.client.ajax(url,
+                        {client: sr.client,
+                            method: 'POST',
+                            contentType: "application/json",
+                            data: JSON.stringify(body),
+                            success: function (data) {
+                                if (201 === data.status) {
+                                    $("#chatterText").val('');
+                                    console.log("Success");
+                                }
+                            }
+                        });
+
+                return false;
+            });
+
+        });
+
+    </script>
+
+</head>
+<body>
+<div class="container" style="margin:10%;">
+
+    <div class="jumbotron">
+        <h2>Hello <%= name %>,</h2>
+
+        <p class="hidden-xs">This is a canvas app. It looks like it belongs right in Salesforce, but it actually is served up by a Node.js
+            server!</p>
+
+    </div>
+
+    <div class="row-fluid">
+
+        <form class="form-horizontal" id="chatterForm" action="#">
+            <fieldset>
+                <div id="legend">
+                    <legend class="">Post to Chatter!</legend>
+                </div>
+
+                <div class="control-group">
+                    <div class="controls">
+                        <input type="text" id="chatterText" name="chatterText" placeholder="Status Update" class="input-xlarge">
+                        <input type="submit" class="btn btn-success"/>
+                    </div>
+                </div>
+
+
+            </fieldset>
+
+        </form>
+
+
+    </div>
+</div>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="bootstrap/js/bootstrap.min.js"></script>
+
+</body>
+</html>
